@@ -1,0 +1,31 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: postgresql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql
+  template:
+    metadata:
+      labels:
+        app: postgresql
+    spec:
+      containers:
+        - name: postgresql
+          image: postgres:12
+          imagePullPolicy: "IfNotPresent"
+          ports:
+          - containerPort: 5432
+          envFrom:
+            - secretRef:
+               name: secret.yml
+          volumeMounts:
+          - mountPath: /var/lib/postgresql/data
+            subPath: pgdata
+            name: volume
+      volumes:
+        - name: volume
+          persistentVolumeClaim:
+             claimName: azure-managed-disk
