@@ -1,0 +1,19 @@
+app:
+  name: weightapp
+  replicas: 3
+  image:
+    repository: "ben141414acr.azurecr.io/weightapprepo"
+    imageTag: 
+    pullPolicy: Always
+
+
+db:
+  name: postgresql
+  replicas: 1
+  image:
+    repository: postgres:latest
+    pullPolicy: IfNotPresent
+  volumeMounts:
+    name: volume
+  pvc:
+   name: azure-managed-disk

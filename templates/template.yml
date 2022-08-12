@@ -1,0 +1,27 @@
+         steps:
+            - task: KubernetesManifest@0
+              displayName: Create imagePullSecret
+              inputs:
+                action: 'createSecret'
+                kubernetesServiceConnection: $(ClusterConnection)
+                secretType: 'generic'
+                secretName: 'secret.yml'
+                secretArguments: '--from-literal=COOKIE_ENCRYPT_PWD=$(COOKIE_ENCRYPT_PWD) --from-literal=HOST=$(HOST) --from-literal=PORT=$(PORT) --from-literal=NODE_ENV=$(NODE_ENV) --from-literal=HOST_URL=$(HOST_URL) --from-literal=OKTA_CLIENT_ID=$(OKTA_CLIENT_ID) --from-literal=OKTA_CLIENT_SECRET=$(OKTA_CLIENT_SECRET) --from-literal=OKTA_ORG_URL=$(OKTA_ORG_URL) --from-literal=PGHOST=$(PGHOST) --from-literal=PGUSERNAME=$(PGUSERNAME) --from-literal=PGDATABASE=$(PGDATABASE) --from-literal=PGPASSWORD=$(PGPASSWORD) --from-literal=POSTGRES_PASSWORD=$(PGPASSWORD) --from-literal=PGPORT=$(PGPORT)'
+
+            - task: HelmInstaller@0
+              inputs:
+                helmVersion: '2.14.1'
+                installKubectl: true
+
+
+            - task: HelmDeploy@0
+              inputs:
+                connectionType: 'Kubernetes Service Connection'
+                kubernetesServiceConnection: $(ClusterConnection)
+                command: 'upgrade'
+                chartType: 'FilePath'
+                chartPath: '$(Build.SourcesDirectory)/helm/Deployment'
+                releaseName: 'weightapp'
+                overrideValues: 'app.image.imageTag=$(Build.BuildId)'
+                valueFile: '$(Build.SourcesDirectory)/helm/Deployment/values.yml'
+                force: true

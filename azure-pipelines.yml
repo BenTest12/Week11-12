@@ -1,0 +1,64 @@
+name: CICDPipe
+
+trigger:
+- master
+- feature/*
+
+resources:
+- repo: self
+
+# Continuous Integration Process.
+stages:
+- stage: Build
+  displayName: Install Docker-Build and push stage
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      name: "ci-group"
+    steps:
+    - task: Docker@2
+      displayName: Build and push image
+      inputs:
+        containerRegistry: 'bendockerreg'
+        repository: 'weightapprepo'
+        command: 'buildAndPush'
+        Dockerfile: '$(Build.SourcesDirectory)/app/Dockerfile'
+
+
+# Deploy to staging Env
+- stage: DeployToStaging
+  condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
+  displayName: Deploy staging stage
+  jobs:
+  - deployment: Deploy
+    displayName: Deploy to staging
+    pool:
+      name: "ci-group"
+    environment: 'staging.default'
+    variables:
+      - group: "staging-vars"
+    strategy:
+      runOnce:
+        deploy:
+         steps:
+            - template: templates/template.yml
+
+
+- stage: DeployToProduction
+  condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
+  displayName: Deploy production stage
+  dependsOn: DeployToStaging
+  jobs:
+  - deployment: Deploy
+    displayName: Deploy to production
+    pool:
+      name: "ci-group"
+    environment: 'production.default'
+    variables:
+      - group: "production-vars"
+    strategy:
+      runOnce:
+        deploy:
+         steps:
+            - template: templates/template.yml

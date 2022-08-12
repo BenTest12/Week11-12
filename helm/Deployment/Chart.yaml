@@ -1,0 +1,11 @@
+apiVersion: v2
+
+name: Deployment
+
+description: A Helm chart to deploy the weight app with an attached db.
+
+type: application
+
+version: 0.1
+
+appVersion: 1

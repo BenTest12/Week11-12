@@ -1,0 +1,31 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.db.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      db: {{ .Values.db.name }}
+  template:
+    metadata:
+      labels:
+        db: {{ .Values.db.name }}
+    spec:
+      containers:
+        - name: {{ .Values.db.name }}
+          image: {{ .Values.db.image.repository }}
+          imagePullPolicy: "IfNotPresent"
+          ports:
+          - containerPort: 5432
+          envFrom:
+            - secretRef:
+               name: secret.yml
+          volumeMounts:
+          - mountPath: /var/lib/postgresql/data
+            subPath: pgdata
+            name: {{ .Values.db.volumeMounts.name }}
+      volumes:
+        - name: {{ .Values.db.volumeMounts.name }}
+          persistentVolumeClaim:
+             claimName: {{ .Values.db.pvc.name }}
